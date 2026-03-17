@@ -37,7 +37,7 @@ const storage = new CloudinaryStorage({
     params: async (req, file) => {
         return {
             folder: 'meteo_documents',
-            resource_type: 'raw',
+            resource_type: 'auto',  // auto-detect: PDFs get proper Content-Type header
             public_id: `${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`
         };
     }
