@@ -38,26 +38,17 @@ cloudinary.config({
 });
 
 // =============================
-// 4. STOCKAGE CLOUDINARY (🔥 CORRIGÉ)
+// 4. STOCKAGE CLOUDINARY
 // =============================
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: async (req, file) => {
-        return {
-            folder: 'meteo_documents',
-
-            // 🔥 IMPORTANT
-            resource_type: 'auto',
-
-            // 🔥 REND PUBLIC
-            type: 'upload',
-
-            // 🔥 DOUBLE SÉCURITÉ (évite "bloqué pour diffusion")
-            access_mode: 'public',
-
-            public_id: `${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`
-        };
-    }
+    params: async (req, file) => ({
+        folder: 'meteo_documents',
+        resource_type: 'raw',        // 🔹 important pour PDF
+        type: 'upload',
+        access_mode: 'public',       // 🔹 essaye de rendre public
+        public_id: `${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`
+    })
 });
 
 const upload = multer({ storage });
@@ -92,24 +83,28 @@ app.get('/api/documents', async (req, res) => {
     }
 });
 
-// Upload document (🔥 corrigé)
+// Upload document avec URL PDF garantie accessible
 app.post('/api/upload', checkAdminPassword, upload.single('fichier'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ erreur: "Aucun fichier" });
     }
 
     try {
+        // 🔹 Générer une URL signée pour le PDF
+        const urlPublique = cloudinary.url(req.file.public_id, {
+            resource_type: 'raw',
+            sign_url: true       // 🔹 assure que l'URL est lisible dans Chrome
+        });
+
         const nouveauDoc = new Document({
             nom: req.file.originalname,
-
-            // 🔥 URL Cloudinary PUBLIC
-            urlFichier: req.file.path
+            urlFichier: urlPublique
         });
 
         await nouveauDoc.save();
 
         res.json({
-            message: "✅ Upload réussi",
+            message: "✅ Upload réussi et PDF accessible dans Chrome",
             document: nouveauDoc
         });
 
