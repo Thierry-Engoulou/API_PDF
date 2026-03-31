@@ -24,6 +24,7 @@ mongoose.connect(process.env.MONGODB_URI)
 const DocumentSchema = new mongoose.Schema({
     nom: String,
     urlFichier: String,
+    publicId: String,
     dateAjout: { type: Date, default: Date.now }
 });
 const Document = mongoose.model('Document', DocumentSchema);
@@ -90,27 +91,46 @@ app.post('/api/upload', checkAdminPassword, upload.single('fichier'), async (req
     }
 
     try {
-        // 🔹 Générer une URL signée pour le PDF
+        // 🔹 1. Trouver les anciens documents
+        const anciens = await Document.find({});
+        
+        // 🔹 2. Supprimer les anciens sur Cloudinary
+        for (const doc of anciens) {
+            if (doc.publicId) {
+                try {
+                    await cloudinary.uploader.destroy(doc.publicId, { resource_type: 'raw' });
+                } catch (e) {
+                    console.error("Erreur suppression Cloudinary:", e);
+                }
+            }
+        }
+
+        // 🔹 3. Vider la base de données
+        await Document.deleteMany({});
+
+        // 🔹 4. Générer une URL signée pour le PDF
         const urlPublique = cloudinary.url(req.file.public_id, {
             resource_type: 'raw',
-            sign_url: true       // 🔹 assure que l'URL est lisible dans Chrome
+            sign_url: true
         });
 
+        // 🔹 5. Sauvegarder avec publicId
         const nouveauDoc = new Document({
             nom: req.file.originalname,
-            urlFichier: urlPublique
+            urlFichier: urlPublique,
+            publicId: req.file.public_id
         });
 
         await nouveauDoc.save();
 
         res.json({
-            message: "✅ Upload réussi et PDF accessible dans Chrome",
+            message: "✅ Ancien bulletin remplacé par le nouveau avec succès !",
             document: nouveauDoc
         });
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ erreur: "Erreur serveur" });
+        res.status(500).json({ erreur: "Erreur serveur: " + err.message });
     }
 });
 
