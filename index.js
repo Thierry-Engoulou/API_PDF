@@ -45,7 +45,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => ({
         folder: 'meteo_documents',
-        resource_type: 'raw',        // 🔹 important pour PDF
+        resource_type: 'auto',        // 🔹 Détection automatique pour PDF/Docs
         type: 'upload',
         access_mode: 'public',       // 🔹 essaye de rendre public
         public_id: `${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`
@@ -108,16 +108,13 @@ app.post('/api/upload', checkAdminPassword, upload.single('fichier'), async (req
         // 🔹 3. Vider la base de données
         await Document.deleteMany({});
 
-        // 🔹 4. Générer une URL signée pour le PDF
-        const urlPublique = cloudinary.url(req.file.public_id, {
-            resource_type: 'raw',
-            sign_url: true
-        });
+        // 🔹 4. Récupérer l'URL réelle fournie par Cloudinary
+        const fileUrl = req.file.path || req.file.secure_url;
 
         // 🔹 5. Sauvegarder avec publicId
         const nouveauDoc = new Document({
             nom: req.file.originalname,
-            urlFichier: urlPublique,
+            urlFichier: fileUrl,
             publicId: req.file.public_id
         });
 

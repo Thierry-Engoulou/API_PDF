@@ -8,7 +8,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "��#\u0000 \u0000A\u0000P\u0000I\u0000_\u0000P\u0000D\u0000F\u0000\r\u0000 \u0000",
   "dependencies": {
     "axios": "^1.13.6",
     "cloudinary": "^1.41.3",
@@ -16,8 +16,16 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "form-data": "^4.0.5",
-    "mongoose": "^9.3.0",
+    "mongoose": "^9.3.2",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Thierry-Engoulou/API_PDF.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Thierry-Engoulou/API_PDF/issues"
+  },
+  "homepage": "https://github.com/Thierry-Engoulou/API_PDF#readme"
 }
